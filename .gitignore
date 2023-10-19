@@ -1,0 +1,12 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/Binaries/fine-code-coverage
+/Binaries/fine-code-coverage
+/Binaries
+/RobotsTxt/obj
+/RobotsTxt/bin
+/RobotsTxtTests/bin
+/RobotsTxtTests/obj

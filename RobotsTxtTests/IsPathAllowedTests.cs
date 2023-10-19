@@ -11,8 +11,8 @@ namespace RobotsTxtTests
 
         [Test, Category("IsPathAllowed")]
         public void IsPathAllowed_EmptyUserAgent_ThrowsArgumentException(
-            [Values("", " ")]string userAgent, // white space considered empty
-            [Values("")]string path)
+            [Values("", " ")] string userAgent, // white space considered empty
+            [Values("")] string path)
         {
             string s = "User-agent: *" + nl + "Disallow: /";
             Robots r = new Robots(s);
@@ -69,7 +69,7 @@ namespace RobotsTxtTests
         public void IsPathAllowed_UserAgentStringCaseInsensitive_False(
             [Values("Slurp", "slurp", "Exabot", "exabot", "FigTree/0.1 Robot libwww-perl/5.04")] string userAgent)
         {
-            string s = 
+            string s =
 @"User-agent: Slurp
 Disallow: /
 User-agent: Exabot
@@ -93,7 +93,7 @@ Disallow: /";
 
         [Test, Category("IsPathAllowed")]
         public void IsPathAllowed_AllowAndDisallow_True(
-            [Values("foo", "/dir/file.ext", "/dir/file.ext1")]string path)
+            [Values("foo", "/dir/file.ext", "/dir/file.ext1")] string path)
         {
             string s = @"User-agent: *" + nl + "Allow: /dir/file.ext" + nl + "Disallow: /dir/";
             Robots r = new Robots(s);
@@ -130,41 +130,41 @@ Disallow: /";
 
         [Test, Category("IsPathAllowed")]
         public void IsPathAllowed_DollarWildcard_False(
-            [Values("a.gif", "foo.gif", "b.a.gif", "a.gif.gif")]string path)
+            [Values("a.gif", "foo.gif", "b.a.gif", "a.gif.gif")] string path)
         {
             string s = @"User-agent: *" + nl + "Disallow: /*.gif$";
             Robots r = Robots.Load(s);
             Assert.False(r.IsPathAllowed("*", path));
         }
 
-        [TestCase("/*/file.html", "/foo/", Result = true)]
-        [TestCase("/*/file.html", "file.html", Result = true)]
-        [TestCase("/*/file.html", "/foo/file2.html", Result = true)]
-        [TestCase("/*/file.html", "/a/file.html", Result = false)]
-        [TestCase("/*/file.html", "/dir/file.html", Result = false)]
-        [TestCase("/*/file.html", "//a//file.html", Result = false, Description = "The path should be normalized to \"/a/file.html\"")]
-        [TestCase("/*/file.html", "/a/a/file.html", Result = false)]
-        [TestCase("/*/file.html", "/a/a/file.htmlz", Result = false)]
-        [TestCase("/*/file.html", "///f.html", Result = true, Description = "The path should be normalized to \"/f.html\"")]
-        [TestCase("/*/file.html", "/\\/f.html", Result = true)]
-        [TestCase("/*/file.html", "/:/f.html", Result = true)]
-        [TestCase("/*/file.html", "/*/f.html", Result = true)]
-        [TestCase("/*/file.html", "/?/f.html", Result = true)]
-        [TestCase("/*/file.html", "/\"/f.html", Result = true)]
-        [TestCase("/*/file.html", "/</f.html", Result = true)]
-        [TestCase("/*/file.html", "/>/f.html", Result = true)]
-        [TestCase("/*/file.html", "/|/f.html", Result = true)]
-        [TestCase("/private*/", "/private/", Result = false)]
-        [TestCase("/private*/", "/Private/", Result = true)]
-        [TestCase("/private*/", "/private/f.html", Result = false)]
-        [TestCase("/private*/", "/private/dir/", Result = false)]
-        [TestCase("/private*/", "/private/dir/f.html", Result = false)]
-        [TestCase("/private*/", "/private1/", Result = false)]
-        [TestCase("/private*/", "/Private1/", Result = true)]
-        [TestCase("/private*/", "/private1/f.html", Result = false)]
-        [TestCase("/private*/", "/private1/dir/", Result = false)]
-        [TestCase("/private*/", "/private1/dir/f.html", Result = false)]
-        [TestCase("*/private/", "/private/dir/f.html", Result = false)]
+        [TestCase("/*/file.html", "/foo/", ExpectedResult = true)]
+        [TestCase("/*/file.html", "file.html", ExpectedResult = true)]
+        [TestCase("/*/file.html", "/foo/file2.html", ExpectedResult = true)]
+        [TestCase("/*/file.html", "/a/file.html", ExpectedResult = false)]
+        [TestCase("/*/file.html", "/dir/file.html", ExpectedResult = false)]
+        [TestCase("/*/file.html", "//a//file.html", ExpectedResult = false, Description = "The path should be normalized to \"/a/file.html\"")]
+        [TestCase("/*/file.html", "/a/a/file.html", ExpectedResult = false)]
+        [TestCase("/*/file.html", "/a/a/file.htmlz", ExpectedResult = false)]
+        [TestCase("/*/file.html", "///f.html", ExpectedResult = true, Description = "The path should be normalized to \"/f.html\"")]
+        [TestCase("/*/file.html", "/\\/f.html", ExpectedResult = true)]
+        [TestCase("/*/file.html", "/:/f.html", ExpectedResult = true)]
+        [TestCase("/*/file.html", "/*/f.html", ExpectedResult = true)]
+        [TestCase("/*/file.html", "/?/f.html", ExpectedResult = true)]
+        [TestCase("/*/file.html", "/\"/f.html", ExpectedResult = true)]
+        [TestCase("/*/file.html", "/</f.html", ExpectedResult = true)]
+        [TestCase("/*/file.html", "/>/f.html", ExpectedResult = true)]
+        [TestCase("/*/file.html", "/|/f.html", ExpectedResult = true)]
+        [TestCase("/private*/", "/private/", ExpectedResult = false)]
+        [TestCase("/private*/", "/Private/", ExpectedResult = true)]
+        [TestCase("/private*/", "/private/f.html", ExpectedResult = false)]
+        [TestCase("/private*/", "/private/dir/", ExpectedResult = false)]
+        [TestCase("/private*/", "/private/dir/f.html", ExpectedResult = false)]
+        [TestCase("/private*/", "/private1/", ExpectedResult = false)]
+        [TestCase("/private*/", "/Private1/", ExpectedResult = true)]
+        [TestCase("/private*/", "/private1/f.html", ExpectedResult = false)]
+        [TestCase("/private*/", "/private1/dir/", ExpectedResult = false)]
+        [TestCase("/private*/", "/private1/dir/f.html", ExpectedResult = false)]
+        [TestCase("*/private/", "/private/dir/f.html", ExpectedResult = false)]
         [Test, Category("IsPathAllowed")]
         public bool IsPathAllowed_StarWildcard(string rule, string path)
         {

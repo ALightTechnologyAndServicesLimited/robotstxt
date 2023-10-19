@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 
 namespace RobotsTxt
 {
@@ -13,7 +15,7 @@ namespace RobotsTxt
         /// <summary>
         /// Gets the raw contents of the robots.txt file.
         /// </summary>
-        public string Raw { get; private set; }
+        public string RobotsContent { get; private set; }
 
         /// <summary>
         /// Gets the list of sitemaps declared in the file.
@@ -39,6 +41,8 @@ namespace RobotsTxt
         /// How to support the Allow directive. Defaults to <see cref="RobotsTxt.AllowRuleImplementation.MoreSpecific"/>.
         /// </summary>
         public AllowRuleImplementation AllowRuleImplementation { get; set; }
+        public string ProvidedDomain { get; private set; }
+        public string FinalDomain { get; private set; }
 
         // We could just have a List<Rules>, since Rule is the base class for AccessRule & CrawlDelayRule... 
         // But IsPathAllowed() and CrawlDelay() functions need these specific collections everytime they're called, so
@@ -65,7 +69,7 @@ namespace RobotsTxt
             HasRules = false;
             IsAnyPathDisallowed = false;
             Malformed = false;
-            Raw = content;
+            RobotsContent = content;
             if (String.IsNullOrWhiteSpace(content))
             {
                 return;
@@ -291,6 +295,60 @@ namespace RobotsTxt
                 path = path.Replace("//", "/");
             }
             return path;
+        }
+
+        public static Robots LoadFromDomain(string domain)
+        {
+            return LoadFromDomain(domain, string.Empty);
+        }
+
+        public static Robots LoadFromDomain(string domain, string userAgent)
+        {
+            bool isError = false; ;
+            (string, string) ret = (String.Empty, domain);
+            try
+            {
+                var httpURL = $"http://{domain}/robots.txt";
+                ret = HttpGet(new Uri(httpURL), userAgent);
+            }
+            catch
+            {
+                isError = true;
+            }
+
+            if ((isError))
+            {
+                try
+                {
+                    var httpsURL = $"https://{domain}/robots.txt";
+                    ret = HttpGet(new Uri(httpsURL), userAgent);
+
+                }
+                catch { }
+            }
+
+            var retVal = Load(ret.Item1);
+            retVal.ProvidedDomain = domain;
+            retVal.FinalDomain = ret.Item2;
+
+            return retVal;
+        }
+
+        private static (string, string) HttpGet(Uri uri, string userAgent)
+        {
+            var request = (HttpWebRequest)WebRequest.Create(uri);
+
+            if (!String.IsNullOrEmpty(userAgent))
+            {
+                request.UserAgent = userAgent;
+            }
+
+            var response = request.GetResponse();
+            var sr = new StreamReader(response.GetResponseStream());
+            var content = sr.ReadToEnd();
+            sr.Close();
+
+            return (content, response.ResponseUri.Host);
         }
         #endregion
     }

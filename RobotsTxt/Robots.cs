@@ -167,21 +167,13 @@ namespace RobotsTxt
             }
 
             path = normalizePath(path);
-            var rulesForThisRobot = specificAccessRules.FindAll(x => userAgent.IndexOf(x.For, StringComparison.InvariantCultureIgnoreCase) >= 0);
+            List<AccessRule> rulesForThisRobot = GetRulesForThisBot(userAgent);
             if (globalAccessRules.Count == 0 && rulesForThisRobot.Count == 0)
             {
                 // no rules for this robot
                 return true;
             }
-            // If there are rules for this robot, we should only check against them. 
-            // If not, we check against the global rules.
-            // (though some robots ignore the rest after reading the rules for *)
-            // We say "String.IsNullOrEmpty(x.Path)" while filtering because "Disallow: " means "Allow all".
-            // And the reason we remove the first characters of the paths before calling IsPathMatch() is because the first characters will allways be '/',
-            // so there is no point having IsPathMatch() compare them.
-            var matchingRules = rulesForThisRobot.Count > 0 ?
-                rulesForThisRobot.FindAll(x => String.IsNullOrEmpty(x.Path) || isPathMatch(path.Substring(1), x.Path.Substring(1)))
-                : globalAccessRules.FindAll(x => String.IsNullOrEmpty(x.Path) || isPathMatch(path.Substring(1), x.Path.Substring(1)));
+            List<AccessRule> matchingRules = GetMatchingRules(path, rulesForThisRobot);
 
             if (matchingRules.Count == 0)
             {
@@ -189,14 +181,7 @@ namespace RobotsTxt
             }
 
             AccessRule ruleToUse;
-            if (AllowRuleImplementation == AllowRuleImplementation.MoreSpecific)
-            {
-                ruleToUse = matchingRules.OrderByDescending(x => x.Path.Length).ThenBy(x => x.Order).First();
-            }
-            else
-            {
-                ruleToUse = matchingRules.OrderBy(x => x.Order).First();
-            }
+            ruleToUse = GetRuleToUse(matchingRules);
 
             switch (AllowRuleImplementation)
             {
@@ -213,6 +198,24 @@ namespace RobotsTxt
             return false;
         }
 
+        private List<AccessRule> GetMatchingRules(string path, List<AccessRule> rulesForThisRobot)
+        {
+            // If there are rules for this robot, we should only check against them. 
+            // If not, we check against the global rules.
+            // (though some robots ignore the rest after reading the rules for *)
+            // We say "String.IsNullOrEmpty(x.Path)" while filtering because "Disallow: " means "Allow all".
+            // And the reason we remove the first characters of the paths before calling IsPathMatch() is because the first characters will allways be '/',
+            // so there is no point having IsPathMatch() compare them.
+            return rulesForThisRobot.Count > 0 ?
+                rulesForThisRobot.FindAll(x => String.IsNullOrEmpty(x.Path) || isPathMatch(path.Substring(1), x.Path.Substring(1)))
+                : globalAccessRules.FindAll(x => String.IsNullOrEmpty(x.Path) || isPathMatch(path.Substring(1), x.Path.Substring(1)));
+        }
+
+        private List<AccessRule> GetRulesForThisBot(string userAgent)
+        {
+            return specificAccessRules.FindAll(x => userAgent.IndexOf(x.For, StringComparison.InvariantCultureIgnoreCase) >= 0);
+        }
+
         public bool IsPathAllowed(string path)
         {
             if (!HasRules || !IsAnyPathDisallowed)
@@ -221,10 +224,7 @@ namespace RobotsTxt
             }
 
             path = normalizePath(path);
-            //var rulesForThisRobot = specificAccessRules.FindAll(x => userAgent.IndexOf(x.For, StringComparison.InvariantCultureIgnoreCase) >= 0);
-            var matchingRules = RulesForThisRobot.Count > 0 ?
-                RulesForThisRobot.FindAll(x => String.IsNullOrEmpty(x.Path) || isPathMatch(path.Substring(1), x.Path.Substring(1)))
-                : globalAccessRules.FindAll(x => String.IsNullOrEmpty(x.Path) || isPathMatch(path.Substring(1), x.Path.Substring(1)));
+            var matchingRules = GetMatchingRules(path, RulesForThisRobot);
 
             if (matchingRules.Count == 0)
             {
@@ -232,14 +232,7 @@ namespace RobotsTxt
             }
 
             AccessRule ruleToUse;
-            if (AllowRuleImplementation == AllowRuleImplementation.MoreSpecific)
-            {
-                ruleToUse = matchingRules.OrderByDescending(x => x.Path.Length).ThenBy(x => x.Order).First();
-            }
-            else
-            {
-                ruleToUse = matchingRules.OrderBy(x => x.Order).First();
-            }
+            ruleToUse = GetRuleToUse(matchingRules);
 
             switch (AllowRuleImplementation)
             {
@@ -254,6 +247,21 @@ namespace RobotsTxt
             }
 
             return false;
+        }
+
+        private AccessRule GetRuleToUse(List<AccessRule> matchingRules)
+        {
+            AccessRule ruleToUse;
+            if (AllowRuleImplementation == AllowRuleImplementation.MoreSpecific)
+            {
+                ruleToUse = matchingRules.OrderByDescending(x => x.Path.Length).ThenBy(x => x.Order).First();
+            }
+            else
+            {
+                ruleToUse = matchingRules.OrderBy(x => x.Order).First();
+            }
+
+            return ruleToUse;
         }
 
         public void InitializeUserAgent(string userAgent)
@@ -267,7 +275,7 @@ namespace RobotsTxt
                 return;
             }
 
-            RulesForThisRobot = specificAccessRules.FindAll(x => userAgent.IndexOf(x.For, StringComparison.InvariantCultureIgnoreCase) >= 0);
+            RulesForThisRobot = GetRulesForThisBot(userAgent);
             if (globalAccessRules.Count == 0 && RulesForThisRobot.Count == 0)
             {
                 IsAnyPathDisallowed = false;

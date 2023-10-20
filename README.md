@@ -4,6 +4,8 @@ This repository is a fork and has small enhancements over the [https://github.co
 
 [https://github.com/cosmaioan/robotstxt](https://github.com/cosmaioan/robotstxt) is a archive of [code.google.com/p/robotstxt](code.google.com/p/robotstxt)
 
+[Official Blog Post Anouncement - Another small open source contribution](https://blog.alightservices.com/2023/10/another-small-open-source-contribution.html)
+
 Added LoadFromDomain(domain) method, LoadFromDomain(domain, userAgent) overload method.
 
 Added ProvidedDomain, FinalDomain properties. For example http://alightservices.com/robots.txt could redirect to https://www.alightservices.com/robots.txt
@@ -21,6 +23,7 @@ InitializeUserAgent(string userAgent) -- call this to ignore all other rules.
 IsPathAllowed(string path) -- verifies rules for the specific user agent.
 
 Call InitializeUserAgent() and then call IsPathAllowed() for slightly faster processing.
+
 
 Roadmap:
 

@@ -50,6 +50,7 @@ namespace RobotsTxt
         private List<AccessRule> globalAccessRules;
         private List<AccessRule> specificAccessRules;
         private List<CrawlDelayRule> crawlDelayRules;
+        private List<AccessRule> RulesForThisRobot;
 
         /// <summary>
         /// Initializes a new <see cref="RobotsTxt.Robots"/> instance for the given robots.txt file content.
@@ -210,6 +211,69 @@ namespace RobotsTxt
             }
 
             return false;
+        }
+
+        public bool IsPathAllowed(string path)
+        {
+            if (!HasRules || !IsAnyPathDisallowed)
+            {
+                return true;
+            }
+
+            path = normalizePath(path);
+            //var rulesForThisRobot = specificAccessRules.FindAll(x => userAgent.IndexOf(x.For, StringComparison.InvariantCultureIgnoreCase) >= 0);
+            var matchingRules = RulesForThisRobot.Count > 0 ?
+                RulesForThisRobot.FindAll(x => String.IsNullOrEmpty(x.Path) || isPathMatch(path.Substring(1), x.Path.Substring(1)))
+                : globalAccessRules.FindAll(x => String.IsNullOrEmpty(x.Path) || isPathMatch(path.Substring(1), x.Path.Substring(1)));
+
+            if (matchingRules.Count == 0)
+            {
+                return true;
+            }
+
+            AccessRule ruleToUse;
+            if (AllowRuleImplementation == AllowRuleImplementation.MoreSpecific)
+            {
+                ruleToUse = matchingRules.OrderByDescending(x => x.Path.Length).ThenBy(x => x.Order).First();
+            }
+            else
+            {
+                ruleToUse = matchingRules.OrderBy(x => x.Order).First();
+            }
+
+            switch (AllowRuleImplementation)
+            {
+                case AllowRuleImplementation.Standard:
+                    return String.IsNullOrEmpty(ruleToUse.Path) || ruleToUse.Allowed;
+                case AllowRuleImplementation.AllowOverrides:
+                    // check if there's any allow rule, if not follow the first disallow rule.
+                    // (again, "disallow:" means allow. which is why String.IsNullOrEmpty(ruleToUse.Path))
+                    return matchingRules.Any(x => x.Allowed) || String.IsNullOrEmpty(ruleToUse.Path);
+                case AllowRuleImplementation.MoreSpecific:
+                    return String.IsNullOrEmpty(ruleToUse.Path) || ruleToUse.Allowed;
+            }
+
+            return false;
+        }
+
+        public void InitializeUserAgent(string userAgent)
+        {
+            if (String.IsNullOrWhiteSpace(userAgent))
+            {
+                throw new ArgumentException("Not a valid user-agent string.", "userAgent");
+            }
+            if (!HasRules || !IsAnyPathDisallowed)
+            {
+                return;
+            }
+
+            RulesForThisRobot = specificAccessRules.FindAll(x => userAgent.IndexOf(x.For, StringComparison.InvariantCultureIgnoreCase) >= 0);
+            if (globalAccessRules.Count == 0 && RulesForThisRobot.Count == 0)
+            {
+                IsAnyPathDisallowed = false;
+                // no rules for this robot
+                return;
+            }
         }
 
         /// <summary>

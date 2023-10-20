@@ -12,9 +12,19 @@ I hate Raw, couldn't bear seeing the word Raw changed the property name to more 
 
 Based on these enahncements, RobotsContent can be cached externally for ProvidedDomain and FinalDomain.
 
+Update 2 - 20/10/2023:
+
+Under normal circumstances, we use the same USER AGENT for sending requests, for gaining some performance, some additional methods were added for filtering USER AGENT specific rules.
+
+InitializeUserAgent(string userAgent) -- call this to ignore all other rules.
+
+IsPathAllowed(string path) -- verifies rules for the specific user agent.
+
+Call InitializeUserAgent() and then call IsPathAllowed() for slightly faster processing.
+
 Roadmap:
 
-Based on necessity, few enhancements might be done.
+Based on necessity, few enhancements might be done, like the above Update 2.
 
 
 

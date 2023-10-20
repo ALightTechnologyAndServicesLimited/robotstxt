@@ -43,6 +43,7 @@ namespace RobotsTxt
         public AllowRuleImplementation AllowRuleImplementation { get; set; }
         public string ProvidedDomain { get; private set; }
         public string FinalDomain { get; private set; }
+        public long CrawlDelayForUserAgent { get; private set; }
 
         // We could just have a List<Rules>, since Rule is the base class for AccessRule & CrawlDelayRule... 
         // But IsPathAllowed() and CrawlDelay() functions need these specific collections everytime they're called, so
@@ -270,6 +271,9 @@ namespace RobotsTxt
             {
                 throw new ArgumentException("Not a valid user-agent string.", "userAgent");
             }
+
+            CrawlDelayForUserAgent = CrawlDelay(userAgent);
+
             if (!HasRules || !IsAnyPathDisallowed)
             {
                 return;
